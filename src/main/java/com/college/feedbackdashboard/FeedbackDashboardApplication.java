@@ -1,8 +1,12 @@
 package com.college.feedbackdashboard;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
 public class FeedbackDashboardApplication {
 
     public static void main(String[] args) {
-        System.out.println("Content Recommendation Feedback Dashboard");
+        SpringApplication.run(FeedbackDashboardApplication.class, args);
     }
 }

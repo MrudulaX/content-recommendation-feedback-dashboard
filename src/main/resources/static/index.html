@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Content Recommendation Feedback</title>
+</head>
+<body>
+
+<h1>Content Recommendation Feedback</h1>
+
+<form id="feedbackForm">
+
+    <label>Content Title:</label>
+    <input type="text" id="contentTitle" required>
+    <br><br>
+
+    <label>Rating:</label>
+    <input type="number" id="rating" min="1" max="5" required>
+    <br><br>
+
+    <label>Feedback:</label>
+    <textarea id="feedback" required></textarea>
+    <br><br>
+
+    <label>Severity:</label>
+    <select id="severity">
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+    </select>
+    <br><br>
+
+    <button type="submit">Submit Feedback</button>
+
+</form>
+
+<p id="message"></p>
+
+<script>
+
+document.getElementById("feedbackForm").addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const feedback = {
+        contentTitle: document.getElementById("contentTitle").value,
+        rating: parseInt(document.getElementById("rating").value),
+        feedback: document.getElementById("feedback").value,
+        severity: document.getElementById("severity").value
+    };
+
+    const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(feedback)
+    });
+
+    if (response.ok) {
+        document.getElementById("message").innerText =
+            "Feedback submitted successfully!";
+
+        document.getElementById("feedbackForm").reset();
+    }
+
+});
+
+</script>
+
+</body>
+</html>
