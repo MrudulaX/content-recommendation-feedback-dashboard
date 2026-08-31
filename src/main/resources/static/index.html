@@ -1,71 +1,519 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Content Recommendation Feedback</title>
+    <meta charset="UTF-8">
+
+    <title>Content Recommendation Feedback Dashboard</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .card h2 {
+            margin: 5px;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .alert {
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 5px solid red;
+            background: #fff0f0;
+        }
+
+    </style>
+
 </head>
+
 <body>
 
-<h1>Content Recommendation Feedback</h1>
+<div class="container">
 
-<form id="feedbackForm">
+    <h1>Content Recommendation Feedback Dashboard</h1>
 
-    <label>Content Title:</label>
-    <input type="text" id="contentTitle" required>
-    <br><br>
 
-    <label>Rating:</label>
-    <input type="number" id="rating" min="1" max="5" required>
-    <br><br>
+    <!-- SUMMARY CARDS -->
 
-    <label>Feedback:</label>
-    <textarea id="feedback" required></textarea>
-    <br><br>
+    <div class="cards">
 
-    <label>Severity:</label>
-    <select id="severity">
-        <option value="Low">Low</option>
-        <option value="Medium">Medium</option>
-        <option value="High">High</option>
-    </select>
-    <br><br>
+        <div class="card">
+            <h3>Total Feedback</h3>
+            <h2 id="totalFeedback">0</h2>
+        </div>
 
-    <button type="submit">Submit Feedback</button>
+        <div class="card">
+            <h3>Average Rating</h3>
+            <h2 id="averageRating">0</h2>
+        </div>
 
-</form>
+        <div class="card">
+            <h3>High Severity</h3>
+            <h2 id="highSeverity">0</h2>
+        </div>
 
-<p id="message"></p>
+        <div class="card">
+            <h3>Low Ratings</h3>
+            <h2 id="lowRatings">0</h2>
+        </div>
+
+    </div>
+
+
+    <!-- FEEDBACK ENTRY -->
+
+    <div class="section">
+
+        <h2>Submit Feedback</h2>
+
+        <form id="feedbackForm">
+
+            <label>Content Title</label>
+
+            <input
+                type="text"
+                id="contentTitle"
+                required
+            >
+
+            <label>Rating (1-5)</label>
+
+            <input
+                type="number"
+                id="rating"
+                min="1"
+                max="5"
+                required
+            >
+
+            <label>Feedback</label>
+
+            <textarea
+                id="feedback"
+                required
+            ></textarea>
+
+            <label>Severity</label>
+
+            <select id="severity">
+
+                <option value="Low">Low</option>
+
+                <option value="Medium">Medium</option>
+
+                <option value="High">High</option>
+
+            </select>
+
+            <button type="submit">
+                Submit Feedback
+            </button>
+
+        </form>
+
+        <p id="message"></p>
+
+    </div>
+
+
+    <!-- SEARCHABLE DASHBOARD -->
+
+    <div class="section">
+
+        <h2>Feedback Dashboard</h2>
+
+        <label>Search Content</label>
+
+        <input
+            type="text"
+            id="search"
+            placeholder="Search by content title..."
+            oninput="loadFeedback()"
+        >
+
+        <label>Filter by Severity</label>
+
+        <select
+            id="severityFilter"
+            onchange="loadFeedback()"
+        >
+
+            <option value="All">All</option>
+
+            <option value="Low">Low</option>
+
+            <option value="Medium">Medium</option>
+
+            <option value="High">High</option>
+
+        </select>
+
+
+        <table>
+
+            <thead>
+
+            <tr>
+
+                <th>Content</th>
+                <th>Rating</th>
+                <th>Feedback</th>
+                <th>Severity</th>
+
+            </tr>
+
+            </thead>
+
+            <tbody id="feedbackTable">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- ALERTS -->
+
+    <div class="section">
+
+        <h2>⚠ Alerts / Exceptions</h2>
+
+        <div id="alerts">
+            No alerts.
+        </div>
+
+    </div>
+
+</div>
+
 
 <script>
 
-document.getElementById("feedbackForm").addEventListener("submit", async function(event) {
 
-    event.preventDefault();
+// ========================================
+// SUBMIT FEEDBACK
+// ========================================
 
-    const feedback = {
-        contentTitle: document.getElementById("contentTitle").value,
-        rating: parseInt(document.getElementById("rating").value),
-        feedback: document.getElementById("feedback").value,
-        severity: document.getElementById("severity").value
-    };
+document
+    .getElementById("feedbackForm")
+    .addEventListener("submit", async function(event) {
 
-    const response = await fetch("/api/feedback", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(feedback)
+        event.preventDefault();
+
+        const feedback = {
+
+            contentTitle:
+                document.getElementById("contentTitle").value,
+
+            rating:
+                parseInt(
+                    document.getElementById("rating").value
+                ),
+
+            feedback:
+                document.getElementById("feedback").value,
+
+            severity:
+                document.getElementById("severity").value
+
+        };
+
+
+        const response = await fetch(
+            "/api/feedback",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(feedback)
+            }
+        );
+
+
+        if (response.ok) {
+
+            document.getElementById("message")
+                .innerText =
+                "Feedback submitted successfully!";
+
+            document
+                .getElementById("feedbackForm")
+                .reset();
+
+            loadFeedback();
+
+            loadSummary();
+
+            loadAlerts();
+
+        }
+
     });
 
-    if (response.ok) {
-        document.getElementById("message").innerText =
-            "Feedback submitted successfully!";
 
-        document.getElementById("feedbackForm").reset();
+// ========================================
+// LOAD FEEDBACK
+// ========================================
+
+async function loadFeedback() {
+
+    const search =
+        document.getElementById("search").value;
+
+    const severity =
+        document.getElementById("severityFilter").value;
+
+
+    let url = "/api/feedback";
+
+
+    if (search.trim() !== "") {
+
+        url =
+            "/api/feedback/search?keyword="
+            + encodeURIComponent(search);
+
     }
 
-});
+
+    const response =
+        await fetch(url);
+
+
+    let feedback =
+        await response.json();
+
+
+    // Apply severity filter
+
+    if (severity !== "All") {
+
+        feedback =
+            feedback.filter(
+                f =>
+                    f.severity.toLowerCase()
+                    === severity.toLowerCase()
+            );
+
+    }
+
+
+    const table =
+        document.getElementById("feedbackTable");
+
+    table.innerHTML = "";
+
+
+    feedback.forEach(f => {
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>${f.contentTitle}</td>
+
+            <td>${f.rating}</td>
+
+            <td>${f.feedback}</td>
+
+            <td>${f.severity}</td>
+
+        `;
+
+
+        table.appendChild(row);
+
+    });
+
+}
+
+
+// ========================================
+// LOAD SUMMARY
+// ========================================
+
+async function loadSummary() {
+
+    const response =
+        await fetch("/api/feedback/summary");
+
+
+    const data =
+        await response.json();
+
+
+    document.getElementById("totalFeedback")
+        .innerText =
+        data.totalFeedback;
+
+
+    document.getElementById("averageRating")
+        .innerText =
+        data.averageRating;
+
+
+    document.getElementById("highSeverity")
+        .innerText =
+        data.highSeverity;
+
+
+    document.getElementById("lowRatings")
+        .innerText =
+        data.lowRatings;
+
+}
+
+
+// ========================================
+// LOAD ALERTS
+// ========================================
+
+async function loadAlerts() {
+
+    const response =
+        await fetch("/api/feedback/alerts");
+
+
+    const alerts =
+        await response.json();
+
+
+    const container =
+        document.getElementById("alerts");
+
+
+    container.innerHTML = "";
+
+
+    if (alerts.length === 0) {
+
+        container.innerText =
+            "No alerts or exceptions.";
+
+        return;
+
+    }
+
+
+    alerts.forEach(f => {
+
+        const div =
+            document.createElement("div");
+
+
+        div.className = "alert";
+
+
+        div.innerHTML = `
+
+            <strong>
+                ${f.contentTitle}
+            </strong>
+
+            <br>
+
+            Rating: ${f.rating}
+
+            <br>
+
+            Severity: ${f.severity}
+
+            <br>
+
+            ${f.feedback}
+
+        `;
+
+
+        container.appendChild(div);
+
+    });
+
+}
+
+
+// ========================================
+// INITIAL LOAD
+// ========================================
+
+loadFeedback();
+
+loadSummary();
+
+loadAlerts();
 
 </script>
 
 </body>
+
 </html>
