@@ -74,6 +74,7 @@ Examples:
 Unit tests will be written using JUnit.
 
 UI testing will be performed using Selenium.
+Jenkins CI trigger test
 
 ## CI/CD
 
